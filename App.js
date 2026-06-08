@@ -1,39 +1,31 @@
+import { StatusBar } from 'expo-status-bar';
+import { StyleSheet, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { useState, useEffect } from 'react';
-import { auth } from './source/firebase/config';
-
-import Login from './source/screens/Login';
-import Register from './source/screens/Register';
-import Home from './source/screens/home';
+import Login from './src/screens/Login/Login';
+import Register from './src/screens/Register/Register';
+import HomeMenu from './src/components/HomeMenu/HomeMenu';
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
-  const [usuario, setUsuario] = useState(null);
-
-  useEffect(() => {
-    auth.onAuthStateChanged(user => {
-      setUsuario(user);
-    });
-  }, []);
-
   return (
-    <NavigationContainer>
-      <Stack.Navigator>
-        {usuario ? (
-          <Stack.Screen
-            name="Home"
-            component={Home}
-            options={{ headerShown: false }}
-          />
-        ) : (
-          <>
-            <Stack.Screen name="Login" component={Login} />
-            <Stack.Screen name="Register" component={Register} />
-          </>
-        )}
-      </Stack.Navigator>
-    </NavigationContainer>
+    <View style={styles.container}>
+      <NavigationContainer>
+        <Stack.Navigator>
+          <Stack.Screen name='Login' component={ Login } options={ { headerShown: false } } />
+          <Stack.Screen name='Register' component={ Register } options={ { headerShown: false } } />
+          <Stack.Screen name='HomeMenu' component={ HomeMenu } options={ { headerShown: false } } />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    width: '100%',
+  },
+});

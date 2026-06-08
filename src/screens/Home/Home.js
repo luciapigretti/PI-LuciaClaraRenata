@@ -1,6 +1,6 @@
 import { View, Text, FlatList, Pressable, StyleSheet } from 'react-native';
 import { useState, useEffect } from 'react';
-import { db, auth } from '../firebase/config';
+import { db, auth } from '../../firebase/config';
 import firebase from 'firebase';
 
 export default function Home(props) {
@@ -45,20 +45,20 @@ export default function Home(props) {
   }
 
   if (loading) {
-  return (
-    <View style={styles.center}>
-      <Text>Cargando...</Text>
-    </View>
-  );
-}
+    return (
+      <View style={styles.center}>
+        <Text>Cargando...</Text>
+      </View>
+    );
+  }
 
-if (posteos.length === 0) {
-  return (
-    <View style={styles.center}>
-      <Text>No hay posteos aún</Text>
-    </View>
-  );
-}
+  if (posteos.length === 0) {
+    return (
+      <View style={styles.center}>
+        <Text>No hay posteos aún</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
