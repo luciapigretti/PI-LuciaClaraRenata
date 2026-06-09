@@ -70,9 +70,9 @@ function RegisterScreen(props) {
 
       {errorRegistro !== "" && <Text style={styles.error}>{errorRegistro}</Text>}
 
-      <Pressable style={styles.btn} onPress={register}>
-        <Text style={styles.btnText}>Registrarse</Text>
-      </Pressable>
+      <Pressable style={styles.btn} onPress={() => onSubmit()}>
+  <Text style={styles.btnText}>Registrarse</Text>
+</Pressable>
 
       <Pressable onPress={() => props.navigation.navigate("Login")}>
         <Text style={styles.link}>¿Ya tenés cuenta? Iniciá sesión</Text>

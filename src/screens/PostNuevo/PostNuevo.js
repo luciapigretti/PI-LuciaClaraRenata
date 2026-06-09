@@ -8,7 +8,7 @@ function NuevoPost(){
         db.collection('posts').add({
             email: auth.currentUser.email,
             descripcionPost: descripcionPost,
-            createdAt: Date.now()
+            createdAt: Date.now(),
             likes: [],
             comments: []
         })

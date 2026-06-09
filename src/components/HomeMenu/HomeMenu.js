@@ -4,6 +4,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import Home from "../../screens/Home/Home";
 import NuevoPost from "../../screens/PostNuevo/PostNuevo";
 import Profile from "../../screens/Profile/Profile";
+import Comments from '../../screens/Comments/Comments';
 
 const Tab = createBottomTabNavigator();
 
@@ -30,6 +31,14 @@ function HomeMenu() {
                     <FontAwesome name="user" size={24} color="black" />
                 )
             }} />
+             <Tab.Screen 
+                name="Comments" 
+                component={Comments} 
+                options={{
+                    headerShown: false,
+                    tabBarButton: () => null
+                }} 
+            />
         </Tab.Navigator>
     );
 };
