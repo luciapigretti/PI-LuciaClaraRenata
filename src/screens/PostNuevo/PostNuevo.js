@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useState } from 'react';
-import { auth, db } from '../../firebase/Config';
+import { auth, db } from '../../firebase/config';
 
 function NuevoPost(){
     const [descripcionPost, setDescripcionPost] = useState('');
@@ -9,6 +9,8 @@ function NuevoPost(){
             email: auth.currentUser.email,
             descripcionPost: descripcionPost,
             createdAt: Date.now()
+            likes: [],
+            comments: []
         })
         .then(() => {setDescripcionPost('')})
         .catch(error => {console.log(error)})

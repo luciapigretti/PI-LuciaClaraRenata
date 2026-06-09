@@ -1,104 +1,152 @@
-import { View, Text, FlatList, StyleSheet, Pressable } from "react-native";
-import { TextInput } from "react-native-web";
-import { useState } from "react";
+import { View, Text, TextInput, Pressable, StyleSheet, FlatList } from 'react-native';
+import { useState, useEffect } from 'react';
+import { db, auth } from '../../firebase/config';
 
-function DynamicForm(props) {
+function Comments({ route }) {
+  const { postId, postData } = route.params;
 
-    const [comentario, setComentario] = useState("")
+  const [comentario, setComentario] = useState('');
+  const [comentarios, setComentarios] = useState([]);
 
-    function onSubmit() {
-        console.log(comentario)
+  useEffect(() => {
+    db.collection('posts')
+      .doc(postId)
+      .onSnapshot(doc => {
+        if (doc.exists) {
+          const data = doc.data();
+
+          if (data.comments) {
+            setComentarios(data.comments);
+          } else {
+            setComentarios([]);
+          }
+        }
+      });
+  }, []);
+
+  function onSubmit() {
+    if (comentario === '') {
+      alert('Escribí un comentario');
+      return;
     }
 
-    return (
-        <View style={styles.container}>
-            <View>
-                <Text style={styles.titulo}>Dejá un comentario:</Text>
+    const nuevoComentario = {
+      email: auth.currentUser.email,
+      texto: comentario,
+      createdAt: Date.now()
+    };
 
-                <TextInput style={styles.input}
-                    keyboardType='default'
-                    placeholder=' Comentario'
-                    onChangeText={text => setComentario(text)}
-                    value={comentario} />
+    const nuevosComentarios = [...comentarios, nuevoComentario];
 
-                <Pressable onPress={() => onSubmit()} style={styles.boton}>
-                    <Text style={styles.textoBoton}>Enviar</Text>
-                </Pressable>
-            </View>
-            <View style={styles.textoBotonContenedor} >
-                <Text style={styles.textoComentario} >Comentario: {comentario}</Text>
-            </View>
-        </View>
-    )
+    db.collection('posts')
+      .doc(postId)
+      .update({
+        comments: nuevosComentarios
+      })
+      .then(() => {
+        setComentario('');
+      })
+      .catch(error => {
+        console.log(error);
+      });
+  }
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.titulo}>Comentarios</Text>
+
+      <View style={styles.post}>
+        <Text style={styles.email}>{postData.email}</Text>
+        <Text style={styles.descripcion}>{postData.descripcionPost}</Text>
+      </View>
+
+      <TextInput
+        style={styles.texto}
+        keyboardType='default'
+        placeholder='Escribí tu comentario'
+        onChangeText={text => setComentario(text)}
+        value={comentario}
+      />
+
+      <Pressable onPress={() => onSubmit()} style={styles.boton}>
+        <Text style={styles.textoBoton}>Enviar comentario</Text>
+      </Pressable>
+
+      <FlatList
+        data={comentarios}
+        keyExtractor={(item, index) => index.toString()}
+        renderItem={({ item }) => (
+          <View style={styles.comentario}>
+            <Text style={styles.emailComentario}>{item.email}</Text>
+            <Text>{item.texto}</Text>
+          </View>
+        )}
+      />
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        paddingHorizontal: 10,
-        marginTop: 20,
-    },
+  container: {
+    flex: 1,
+    padding: 20
+  },
 
-    titulo: {
-        fontSize: 30,
-        textAlign: "center"
-    },
+  titulo: {
+    fontSize: 35,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    marginTop: 30
+  },
 
-    input: {
-        height: 20,
-        paddingVertical: 15,
-        paddingHorizontal: 0,
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderStyle: 'solid',
-        borderCurve: 6,
-        marginVertical: 10,
-    },
+  post: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 20
+  },
 
-    botonLogin: {
-        backgroundColor: '#28a745',
-        paddingHorizontal: 10,
-        paddingVertical: 6,
-        alignItems: 'center',
-        borderCurve: 4,
-        borderWidth: 1,
-        borderStyle: 'solid',
-        borderColor: '#28a745',
-        marginTop: 10
-    },
+  email: {
+    fontSize: 12,
+    marginBottom: 5
+  },
 
-    boton: {
-        backgroundColor: '#28a745',
-        paddingHorizontal: 10,
-        paddingVertical: 6,
-        alignItems: 'center',
-        borderCurve: 4,
-        borderWidth: 1,
-        borderStyle: 'solid',
-        borderColor: '#28a745',
-    },
+  descripcion: {
+    fontSize: 16
+  },
 
-    textoBoton: {
-        textAlign: "center",
-        fontSize: 18,
-        color: '#ffffffff',
-        marginTop: 10,
-        marginBottom: 10
-    },
+  texto: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 20
+  },
 
-    textoComentario: {
-        textAlign: "left",
-        fontSize: 18,
-        color: '#181818ff',
-        marginTop: 10,
-        marginBottom: 10
-    },
-    textoRegistroContenedor: {
-        textAlign: "left",
-        fontSize: 18,
-        color: '#0e0d0dff',
-        marginTop: 10
-    }
-})
+  boton: {
+    backgroundColor: '#57B8E8',
+    padding: 15,
+    borderRadius: 5,
+    marginBottom: 20
+  },
 
-export default DynamicForm;
+  textoBoton: {
+    textAlign: 'center',
+    fontWeight: 'bold'
+  },
+
+  comentario: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+    paddingVertical: 10
+  },
+
+  emailComentario: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    marginBottom: 3
+  }
+});
+
+export default Comments;

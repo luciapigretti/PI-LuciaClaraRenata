@@ -1,95 +1,88 @@
-import { View, Text, FlatList, Pressable, StyleSheet } from 'react-native';
-import { useState, useEffect } from 'react';
+import { Pressable, FlatList, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
 import { db, auth } from '../../firebase/config';
-import firebase from 'firebase';
 
-export default function Home(props) {
-  const [posteos, setPosteos] = useState([]);
-  const [loading, setLoading] = useState(true);
+function Home({ navigation }) {
+
+  const [posts, setPosts] = useState([]);
 
   useEffect(() => {
     db.collection('posts')
       .orderBy('createdAt', 'desc')
       .onSnapshot(docs => {
-        let posts = [];
+        let posteos = [];
+
         docs.forEach(doc => {
-          posts.push({
+          posteos.push({
             id: doc.id,
             data: doc.data()
           });
         });
-        setPosteos(posts);
-        setLoading(false);
+
+        setPosts(posteos);
       });
   }, []);
 
-  function darLike(postId, likes) {
-    const usuarioActual = auth.currentUser.email;
-    const yaLikeo = likes.includes(usuarioActual);
+  function comentar(post) {
+    navigation.navigate('Comments', {
+      postId: post.id,
+      postData: post.data
+    });
+  }
 
-    db.collection('posts')
-      .doc(postId)
-      .update({
-        likes: yaLikeo
-          ? firebase.firestore.FieldValue.arrayRemove(usuarioActual)
-          : firebase.firestore.FieldValue.arrayUnion(usuarioActual)
+  function likear(post) {
+    const emailUsuario = auth.currentUser.email;
+    const likesActuales = post.data.likes || [];
+
+    if (likesActuales.includes(emailUsuario)) {
+      const nuevosLikes = likesActuales.filter(email => email !== emailUsuario);
+
+      db.collection('posts').doc(post.id).update({
+        likes: nuevosLikes
       });
-  }
+    } else {
+      const nuevosLikes = [...likesActuales, emailUsuario];
 
-  if (loading) {
-    return (
-      <View style={styles.center}>
-        <Text>Cargando...</Text>
-      </View>
-    );
-  }
-
-  if (loading) {
-    return (
-      <View style={styles.center}>
-        <Text>Cargando...</Text>
-      </View>
-    );
-  }
-
-  if (posteos.length === 0) {
-    return (
-      <View style={styles.center}>
-        <Text>No hay posteos aún</Text>
-      </View>
-    );
+      db.collection('posts').doc(post.id).update({
+        likes: nuevosLikes
+      });
+    }
   }
 
   return (
     <View style={styles.container}>
+      <Text style={styles.titulo}>HOME</Text>
+
       <FlatList
-        data={posteos}
+        data={posts}
         keyExtractor={item => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <Text style={styles.owner}>{item.data.owner}</Text>
-            <Text style={styles.description}>{item.data.description}</Text>
+        renderItem={({ item }) => {
+          const likes = item.data.likes || [];
+          const usuarioLikeo = likes.includes(auth.currentUser.email);
 
-            <View style={styles.actions}>
-              <Pressable onPress={() => darLike(item.id, item.data.likes || [])}>
-                <Text style={styles.like}>
-                  {(item.data.likes || []).includes(auth.currentUser.email)
-                    ? '❤️'
-                    : '🤍'}{' '}
-                  {(item.data.likes || []).length}
-                </Text>
-              </Pressable>
+          return (
+            <View style={styles.post}>
+              <Text style={styles.postEmail}>{item.data.email}</Text>
+              <Text style={styles.postTexto}>{item.data.descripcionPost}</Text>
 
-              <Pressable
-                onPress={() =>
-                  props.navigation.navigate('Comments', { postId: item.id })
-                }
-              >
-                <Text style={styles.comentar}>💬 Comentar</Text>
-              </Pressable>
+              <Text style={styles.cantidadLikes}>
+                Likes: {likes.length}
+              </Text>
+
+              <View style={styles.botones}>
+                <Pressable style={styles.botonEliminar} onPress={() => likear(item)}>
+                  <Text style={styles.textoBoton}>
+                    {usuarioLikeo ? 'Quitar like' : 'Me gusta'}
+                  </Text>
+                </Pressable>
+
+                <Pressable style={styles.botonEliminar} onPress={() => comentar(item)}>
+                  <Text style={styles.textoBoton}>Comentar</Text>
+                </Pressable>
+              </View>
             </View>
-          </View>
-        )}
+          );
+        }}
       />
     </View>
   );
@@ -98,34 +91,77 @@ export default function Home(props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    padding: 20
   },
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  card: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  owner: {
+
+  titulo: {
     fontWeight: 'bold',
-    marginBottom: 4,
+    fontSize: 30,
+    marginTop: 30,
+    marginBottom: 20
   },
-  description: {
-    marginBottom: 8,
+
+  email: {
+    fontSize: 15,
+    marginBottom: 25
   },
-  actions: {
+
+  subtitulo: {
+    fontWeight: 'bold',
+    fontSize: 24,
+    marginBottom: 15
+  },
+
+  post: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12
+  },
+
+  postEmail: {
+    fontSize: 12,
+    marginBottom: 5
+  },
+
+  postTexto: {
+    fontSize: 16
+  },
+
+  cantidadLikes: {
+    fontSize: 14,
+    marginTop: 8
+  },
+
+  botones: {
     flexDirection: 'row',
-    gap: 16,
+    justifyContent: 'space-between',
+    marginTop: 10
   },
-  like: {
-    fontSize: 16,
+
+  botonEliminar: {
+    backgroundColor: 'orange',
+    padding: 8,
+    borderRadius: 5,
+    marginTop: 10,
+    alignSelf: 'flex-end'
   },
-  comentar: {
-    fontSize: 16,
-    color: '#555',
+
+  boton: {
+    backgroundColor: 'orange',
+    width: '80%',
+    padding: 15,
+    borderRadius: 8,
+    alignSelf: 'center',
+    marginTop: 20,
+    marginBottom: 20
   },
+
+  textoBoton: {
+    textAlign: 'center',
+    fontWeight: 'bold'
+  }
 });
+
+export default Home;
